@@ -393,6 +393,7 @@ function App() {
   const [tplOpen, setTplOpen] = useState(false);
   const [files, setFiles] = useState({});
   const [manualName, setManualName] = useState('');
+  const [zipName, setZipName] = useState('renamed_photos');
   const [newCat, setNewCat] = useState('');
   const [dragOver, setDragOver] = useState(null);
   const [rmMeta, setRmMeta] = useState(true);
@@ -476,7 +477,7 @@ function App() {
         const zip=new JSZip();
         for(const r of allRenames) { let b=r.entry.file; if(rmMeta) b=await stripMeta(b,outFmt==='original'?'jpeg':outFmt,jpgQ); zip.file(r.newN,b); }
         const c=await zip.generateAsync({type:'blob'}); const u=URL.createObjectURL(c);
-        const a=document.createElement('a'); a.href=u; a.download='renamed_photos.zip'; a.click(); URL.revokeObjectURL(u);
+        const a=document.createElement('a'); a.href=u; a.download=(zipName.trim()||'renamed_photos')+'.zip'; a.click(); URL.revokeObjectURL(u);
       }
       showToast(`${totalFiles}개 파일 다운로드 완료!`);
     } catch(e){ console.error(e); showToast('오류가 발생했습니다.'); }
@@ -506,8 +507,17 @@ function App() {
       {/* Name Config */}
       <div className="name-config">
         <div className="section-title">파일 이름 설정</div>
-        <input className="input" placeholder="예: 깡통" value={manualName} onChange={e=>setManualName(e.target.value)} />
-        <div className="hint">결과 예시: <strong style={{color:'var(--success)'}}>{manualName||'photo'}{sep}카테고리1.jpg</strong></div>
+        <div style={{display:'flex',gap:'10px',flexWrap:'wrap'}}>
+          <div style={{flex:'1',minWidth:'140px'}}>
+            <div className="hint" style={{marginTop:0,marginBottom:'6px',fontWeight:600,color:'var(--text-dim)'}}>메인 이름</div>
+            <input className="input" placeholder="예: 깡통" value={manualName} onChange={e=>setManualName(e.target.value)} />
+          </div>
+          <div style={{flex:'1',minWidth:'140px'}}>
+            <div className="hint" style={{marginTop:0,marginBottom:'6px',fontWeight:600,color:'var(--text-dim)'}}>저장 파일명 (.zip)</div>
+            <input className="input" placeholder="예: 깡통" value={zipName} onChange={e=>setZipName(e.target.value)} />
+          </div>
+        </div>
+        <div className="hint">결과 예시: <strong style={{color:'var(--success)'}}>{manualName||'photo'}{sep}카테고리1.jpg</strong> → <strong style={{color:'var(--accent)'}}>{zipName.trim()||'깡통'}.zip</strong></div>
       </div>
 
       {/* Options */}
