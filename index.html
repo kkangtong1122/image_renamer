@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Photo Renamer</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/pretendard/1.3.9/static/pretendard.min.css" rel="stylesheet" />
+<style>
+  /* ===== THEME VARIABLES ===== */
+  [data-theme="dark"] {
+    --bg: #0e0f13; --surface: #16171d; --surface-hover: #1e1f27;
+    --border: #2a2b35; --border-light: #3a3b48;
+    --text: #e8e9ed; --text-dim: #8b8d9a; --text-muted: #5c5e6b;
+    --accent: #6c8cff; --accent-dim: #4a62b8; --accent-glow: rgba(108,140,255,0.12);
+    --danger: #ff6b6b; --danger-dim: rgba(255,107,107,0.12);
+    --success: #5cd4a0; --success-dim: rgba(92,212,160,0.12);
+    --card-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    --thumb-border: rgba(255,255,255,0.06);
+  }
+  [data-theme="light"] {
+    --bg: #f4f5f7; --surface: #ffffff; --surface-hover: #f0f1f3;
+    --border: #e0e1e6; --border-light: #cccdd4;
+    --text: #1a1b1e; --text-dim: #5c5e6b; --text-muted: #9496a1;
+    --accent: #4a6cf7; --accent-dim: #3a56c5; --accent-glow: rgba(74,108,247,0.1);
+    --danger: #e5484d; --danger-dim: rgba(229,72,77,0.1);
+    --success: #30a46c; --success-dim: rgba(48,164,108,0.1);
+    --card-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    --thumb-border: rgba(0,0,0,0.06);
+  }
+  [data-theme="beige"] {
+    --bg: #f5f0e8; --surface: #faf7f2; --surface-hover: #f0ebe2;
+    --border: #e0d8ca; --border-light: #cfc5b4;
+    --text: #3d3529; --text-dim: #7a7060; --text-muted: #a89e8e;
+    --accent: #b8860b; --accent-dim: #9a7209; --accent-glow: rgba(184,134,11,0.1);
+    --danger: #c53030; --danger-dim: rgba(197,48,48,0.1);
+    --success: #2f855a; --success-dim: rgba(47,133,90,0.1);
+    --card-shadow: 0 1px 4px rgba(100,80,40,0.08);
+    --thumb-border: rgba(100,80,40,0.08);
+  }
+  [data-theme="blue"] {
+    --bg: #e8f0fa; --surface: #f0f6ff; --surface-hover: #e2ecf8;
+    --border: #c4d7ef; --border-light: #a8c4e0;
+    --text: #1a2a3d; --text-dim: #4a6a8a; --text-muted: #8aaac8;
+    --accent: #3b82f6; --accent-dim: #2563eb; --accent-glow: rgba(59,130,246,0.12);
+    --danger: #ef4444; --danger-dim: rgba(239,68,68,0.1);
+    --success: #22c55e; --success-dim: rgba(34,197,94,0.1);
+    --card-shadow: 0 1px 4px rgba(40,80,140,0.08);
+    --thumb-border: rgba(40,80,140,0.06);
+  }
+  [data-theme="pink"] {
+    --bg: #fdf2f6; --surface: #fff5f9; --surface-hover: #fce8f0;
+    --border: #f0c6d6; --border-light: #e8a8c0;
+    --text: #3d1a2a; --text-dim: #8a4a6a; --text-muted: #c88aa8;
+    --accent: #ec4899; --accent-dim: #db2777; --accent-glow: rgba(236,72,153,0.12);
+    --danger: #e11d48; --danger-dim: rgba(225,29,72,0.1);
+    --success: #10b981; --success-dim: rgba(16,185,129,0.1);
+    --card-shadow: 0 1px 4px rgba(140,40,80,0.06);
+    --thumb-border: rgba(140,40,80,0.05);
+  }
+  [data-theme="green"] {
+    --bg: #ecf5f0; --surface: #f2faf6; --surface-hover: #e4f2ea;
+    --border: #b8dcc8; --border-light: #96ccae;
+    --text: #1a3d2a; --text-dim: #4a7a5e; --text-muted: #88b89a;
+    --accent: #16a34a; --accent-dim: #15803d; --accent-glow: rgba(22,163,74,0.12);
+    --danger: #dc2626; --danger-dim: rgba(220,38,38,0.1);
+    --success: #059669; --success-dim: rgba(5,150,105,0.1);
+    --card-shadow: 0 1px 4px rgba(20,80,40,0.08);
+    --thumb-border: rgba(20,80,40,0.06);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Pretendard', -apple-system, sans-serif;
+    background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.5;
+    transition: background 0.3s, color 0.3s;
+  }
+  .app { max-width: 1120px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  /* Header */
+  .header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 36px; flex-wrap: wrap; gap: 12px; }
+  .header-left h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 4px; }
+  .header-left h1 span { color: var(--accent); }
+  .header-left p { font-size: 14px; color: var(--text-dim); }
+
+  /* Theme Picker */
+  .theme-picker { display: flex; gap: 6px; align-items: center; padding-top: 4px; }
+  .theme-dot {
+    width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border);
+    cursor: pointer; transition: all 0.15s; position: relative;
+  }
+  .theme-dot:hover { transform: scale(1.15); }
+  .theme-dot.active { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
+  .theme-dot[data-t="dark"] { background: #16171d; }
+  .theme-dot[data-t="light"] { background: #f4f5f7; }
+  .theme-dot[data-t="beige"] { background: #f5f0e8; }
+  .theme-dot[data-t="blue"] { background: #c4d7ef; }
+  .theme-dot[data-t="pink"] { background: #f0c6d6; }
+  .theme-dot[data-t="green"] { background: #b8dcc8; }
+
+  /* Shared Controls */
+  .name-config {
+    background: var(--surface); border: 1px solid var(--border); box-shadow: var(--card-shadow);
+    border-radius: 12px; padding: 24px; margin-bottom: 20px; transition: all 0.3s;
+  }
+  .section-title {
+    font-size: 11px; font-weight: 700; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 14px;
+  }
+  .input {
+    width: 100%; padding: 10px 14px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--bg); color: var(--text);
+    font-size: 14px; font-family: inherit; outline: none; transition: border-color 0.15s;
+  }
+  .input:focus { border-color: var(--accent); }
+  .input::placeholder { color: var(--text-muted); }
+  .hint { font-size: 11px; color: var(--text-muted); margin-top: 6px; line-height: 1.8; }
+
+  .options-row { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; flex-wrap: wrap; }
+  .opt {
+    display: flex; align-items: center; gap: 5px; font-size: 12px;
+    color: var(--text-dim); cursor: pointer; user-select: none;
+  }
+  .opt input[type="checkbox"] { accent-color: var(--accent); width: 14px; height: 14px; }
+  .sel {
+    padding: 5px 8px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--bg); color: var(--text); font-size: 12px; font-family: inherit; outline: none;
+  }
+  .sep-input { width: 42px; text-align: center; padding: 5px 4px; font-size: 13px; }
+
+  /* Current Name */
+  .cur-name-bar {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 14px;
+  }
+  .cur-name-label { font-size: 11px; color: var(--text-muted); }
+  .cur-name-badge {
+    padding: 3px 10px; border-radius: 6px; background: var(--accent-glow);
+    border: 1px solid var(--accent-dim); color: var(--accent); font-size: 13px; font-weight: 600;
+  }
+
+  /* Category Bar */
+  /* Template Dropdown */
+  .tpl-wrap { position: relative; margin-bottom: 14px; }
+  .tpl-trigger {
+    display: flex; align-items: center; justify-content: space-between;
+    width: 100%; padding: 10px 14px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--surface); box-shadow: var(--card-shadow);
+    color: var(--text); font-size: 13px; font-family: inherit; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .tpl-trigger:hover { border-color: var(--border-light); }
+  .tpl-trigger.open { border-color: var(--accent); border-radius: 10px 10px 0 0; }
+  .tpl-trigger-left { display: flex; align-items: center; gap: 8px; }
+  .tpl-trigger-label { color: var(--text-muted); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+  .tpl-trigger-name { font-weight: 600; color: var(--accent); }
+  .tpl-arrow { font-size: 10px; color: var(--text-muted); transition: transform 0.2s; }
+  .tpl-arrow.open { transform: rotate(180deg); }
+  .tpl-dropdown {
+    position: absolute; top: 100%; left: 0; right: 0; z-index: 50;
+    background: var(--surface); border: 1px solid var(--accent); border-top: none;
+    border-radius: 0 0 10px 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    overflow: hidden;
+  }
+  .tpl-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px; cursor: pointer; transition: background 0.1s;
+    border-bottom: 1px solid var(--border);
+  }
+  .tpl-item:last-child { border-bottom: none; }
+  .tpl-item:hover { background: var(--surface-hover); }
+  .tpl-item.active { background: var(--accent-glow); }
+  .tpl-item-left { flex: 1; min-width: 0; }
+  .tpl-item-name { font-size: 13px; font-weight: 600; }
+  .tpl-item-cats { font-size: 11px; color: var(--text-muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tpl-item-del {
+    background: none; border: none; color: var(--text-muted); cursor: pointer;
+    font-size: 13px; padding: 4px 8px; border-radius: 6px; transition: all 0.15s; flex-shrink: 0;
+  }
+  .tpl-item-del:hover { color: var(--danger); background: var(--danger-dim); }
+  .tpl-save-row {
+    display: flex; gap: 6px; padding: 10px 14px; border-top: 1px solid var(--border);
+    background: var(--bg);
+  }
+  .tpl-save-input {
+    padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text); font-size: 12px; font-family: inherit;
+    outline: none; flex: 1; min-width: 0;
+  }
+  .tpl-save-input:focus { border-color: var(--accent); }
+  .tpl-save-input::placeholder { color: var(--text-muted); }
+
+  .cat-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+  .cat-bar-right { display: flex; gap: 6px; align-items: center; }
+  .cat-input {
+    padding: 5px 10px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--bg); color: var(--text); font-size: 12px; font-family: inherit; outline: none; width: 120px;
+  }
+  .cat-input:focus { border-color: var(--accent); }
+  .cat-input::placeholder { color: var(--text-muted); }
+  .btn {
+    padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text); font-size: 12px;
+    font-family: inherit; cursor: pointer; transition: all 0.15s; white-space: nowrap;
+  }
+  .btn:hover { border-color: var(--border-light); background: var(--surface-hover); }
+  .btn-accent { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .btn-accent:hover { opacity: 0.85; }
+  .btn-sm { padding: 3px 8px; font-size: 11px; }
+  .btn-icon {
+    background: none; border: none; color: var(--text-muted); cursor: pointer;
+    font-size: 14px; padding: 3px 6px; border-radius: 4px; transition: all 0.15s;
+  }
+  .btn-icon:hover { color: var(--danger); background: var(--danger-dim); }
+
+  /* View Toggle */
+  .view-toggle { display: flex; gap: 2px; background: var(--bg); border-radius: 6px; padding: 2px; border: 1px solid var(--border); }
+  .view-btn {
+    padding: 4px 8px; border-radius: 4px; border: none; background: transparent;
+    color: var(--text-muted); font-size: 14px; cursor: pointer; transition: all 0.15s; line-height: 1;
+  }
+  .view-btn.active { background: var(--accent-glow); color: var(--accent); }
+
+  /* Grid */
+  .categories-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 14px; margin-bottom: 28px;
+  }
+  .card {
+    background: var(--surface); border: 1px solid var(--border); box-shadow: var(--card-shadow);
+    border-radius: 12px; overflow: hidden; transition: all 0.2s;
+  }
+  .card.drag-over { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+  .card-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 14px; border-bottom: 1px solid var(--border);
+  }
+  .card-name { font-size: 14px; font-weight: 600; }
+  .card-count { font-size: 11px; color: var(--text-muted); margin-left: 6px; }
+  .card-actions { display: flex; gap: 2px; align-items: center; }
+
+  .drop { padding: 20px 14px; min-height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; }
+  .drop-empty { text-align: center; }
+  .drop-icon { font-size: 24px; margin-bottom: 6px; opacity: 0.25; }
+  .drop-text { font-size: 12px; color: var(--text-muted); }
+
+  /* LIST VIEW */
+  .flist { width: 100%; display: flex; flex-direction: column; gap: 5px; }
+  .fitem {
+    display: flex; align-items: center; gap: 8px; padding: 7px 8px;
+    background: var(--bg); border-radius: 8px; font-size: 12px;
+  }
+  .fthumb { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; flex-shrink: 0; border: 1px solid var(--thumb-border); cursor: pointer; transition: opacity 0.15s; }
+  .fthumb:hover { opacity: 0.8; }
+  .finfo { flex: 1; min-width: 0; }
+  .foriginal { color: var(--text-muted); font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fname-tag { color: var(--accent); font-size: 9px; margin-left: 4px; }
+  .fnew { color: var(--success); font-weight: 500; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fremove { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 14px; padding: 2px 5px; border-radius: 4px; transition: all 0.15s; flex-shrink: 0; }
+  .fremove:hover { color: var(--danger); background: var(--danger-dim); }
+
+  /* ALBUM VIEW */
+  .album { width: 100%; display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 6px; }
+  .album-item { position: relative; border-radius: 8px; overflow: hidden; aspect-ratio: 1; cursor: pointer; }
+  .album-img { width: 100%; height: 100%; object-fit: cover; display: block; transition: opacity 0.15s; border: 1px solid var(--thumb-border); border-radius: 8px; }
+  .album-item:hover .album-img { opacity: 0.85; }
+  .album-label {
+    position: absolute; bottom: 0; left: 0; right: 0; padding: 3px 5px;
+    background: linear-gradient(transparent, rgba(0,0,0,0.7));
+    color: #fff; font-size: 9px; font-weight: 500; line-height: 1.3;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .album-remove {
+    position: absolute; top: 3px; right: 3px; width: 18px; height: 18px;
+    border-radius: 50%; background: rgba(0,0,0,0.6); color: #fff;
+    border: none; font-size: 11px; cursor: pointer; display: flex;
+    align-items: center; justify-content: center; opacity: 0; transition: opacity 0.15s;
+  }
+  .album-item:hover .album-remove { opacity: 1; }
+
+  .add-more { font-size: 11px; color: var(--text-muted); margin-top: 8px; cursor: pointer; text-align: center; }
+  .add-more:hover { color: var(--accent); }
+
+  /* Bottom */
+  .bottom { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .btn-big { padding: 12px 28px; font-size: 14px; font-weight: 600; border-radius: 10px; }
+
+  /* Lightbox */
+  .lightbox {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+    display: flex; align-items: center; justify-content: center; z-index: 200;
+    backdrop-filter: blur(6px); cursor: pointer;
+  }
+  .lightbox img { max-width: 90vw; max-height: 85vh; border-radius: 10px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+  .lightbox-info {
+    position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,0.7); color: #fff; padding: 8px 18px; border-radius: 8px;
+    font-size: 13px; text-align: center; max-width: 90vw;
+  }
+  .lightbox-nav {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    background: rgba(255,255,255,0.15); color: #fff; border: none;
+    width: 44px; height: 44px; border-radius: 50%; font-size: 20px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+  }
+  .lightbox-nav:hover { background: rgba(255,255,255,0.3); }
+  .lightbox-nav.prev { left: 16px; }
+  .lightbox-nav.next { right: 16px; }
+
+  /* Preview Modal */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    display: flex; align-items: center; justify-content: center; z-index: 150; backdrop-filter: blur(4px);
+  }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 24px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;
+  }
+  .modal h3 { font-size: 17px; margin-bottom: 14px; }
+  .plist { display: flex; flex-direction: column; gap: 6px; margin-bottom: 20px; }
+  .pitem { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 5px 0; border-bottom: 1px solid var(--border); }
+  .parrow { color: var(--accent); font-weight: 700; flex-shrink: 0; }
+  .pold { color: var(--text-muted); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pnew { color: var(--success); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+  /* Stats Bar */
+  .stats {
+    display: flex; gap: 16px; align-items: center; margin-bottom: 14px;
+    padding: 8px 14px; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; font-size: 12px; color: var(--text-dim); flex-wrap: wrap;
+  }
+  .stat-num { font-weight: 700; color: var(--accent); }
+
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--success); color: #fff; padding: 10px 22px; border-radius: 10px;
+    font-size: 13px; font-weight: 600; z-index: 300;
+    animation: fadeUp 0.3s, fadeUp 0.3s 2s reverse forwards;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+  }
+  @media (max-width: 600px) {
+    .app { padding: 24px 16px 60px; }
+    .categories-grid { grid-template-columns: 1fr; }
+    .header-left h1 { font-size: 22px; }
+    .album { grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); }
+  }
+</style>
+</head>
+<body data-theme="dark">
+<div id="app"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.25.6/babel.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script type="text/babel">
+const { useState, useRef, useEffect, useMemo } = React;
+
+const DEFAULT_CATS = ['smile','happy','annoying','crying'];
+const DEFAULT_TPLS = {
+  '기본': ['smile','happy','annoying','crying'],
+};
+const THEMES = [
+  { id:'dark', label:'다크' },
+  { id:'light', label:'라이트' },
+  { id:'beige', label:'베이지' },
+  { id:'blue', label:'블루' },
+  { id:'pink', label:'핑크' },
+  { id:'green', label:'그린' },
+];
+const LS = (k,d) => { try { const v=localStorage.getItem(k); return v?JSON.parse(v):d; } catch{ return d; } };
+const SS = (k,v) => { try { localStorage.setItem(k,JSON.stringify(v)); } catch{} };
+
+function getExt(f) { const d=f.lastIndexOf('.'); return d>=0?f.slice(d).toLowerCase():'.jpg'; }
+function fmtSize(b) { if(b<1024) return b+'B'; if(b<1048576) return (b/1024).toFixed(1)+'KB'; return (b/1048576).toFixed(1)+'MB'; }
+
+function stripMeta(file,fmt,q) {
+  return new Promise(res => {
+    const img=new Image(), url=URL.createObjectURL(file);
+    img.onload=()=>{ const c=document.createElement('canvas'); c.width=img.naturalWidth; c.height=img.naturalHeight; c.getContext('2d').drawImage(img,0,0); URL.revokeObjectURL(url); const m=fmt==='png'?'image/png':fmt==='webp'?'image/webp':'image/jpeg'; c.toBlob(b=>res(b),m,q/100); };
+    img.onerror=()=>{ URL.revokeObjectURL(url); res(file); };
+    img.src=url;
+  });
+}
+
+function App() {
+  const [theme, setTheme] = useState(()=>LS('pr-theme','dark'));
+  const [cats, setCats] = useState(()=>LS('pr-cats',DEFAULT_CATS));
+  const [templates, setTemplates] = useState(()=>LS('pr-tpls',DEFAULT_TPLS));
+  const [tplName, setTplName] = useState('');
+  const [tplOpen, setTplOpen] = useState(false);
+  const [files, setFiles] = useState({});
+  const [manualName, setManualName] = useState('');
+  const [newCat, setNewCat] = useState('');
+  const [dragOver, setDragOver] = useState(null);
+  const [rmMeta, setRmMeta] = useState(true);
+  const [outFmt, setOutFmt] = useState('original');
+  const [jpgQ, setJpgQ] = useState(92);
+  const [sep, setSep] = useState('_');
+  const [viewMode, setViewMode] = useState('album'); // 'list' | 'album'
+  const [showPreview, setShowPreview] = useState(false);
+  const [lightbox, setLightbox] = useState(null); // {cat, idx}
+  const [toast, setToast] = useState('');
+  const [processing, setProcessing] = useState(false);
+  const tplRef = useRef(null);
+  const refs = useRef({});
+
+  useEffect(()=>{ document.body.setAttribute('data-theme', theme); SS('pr-theme',theme); },[theme]);
+  useEffect(()=>{ SS('pr-cats',cats); },[cats]);
+  useEffect(()=>{ SS('pr-tpls',templates); },[templates]);
+  useEffect(()=>{
+    if(!tplOpen) return;
+    const h = e => { if(tplRef.current && !tplRef.current.contains(e.target)) setTplOpen(false); };
+    document.addEventListener('mousedown',h); return ()=>document.removeEventListener('mousedown',h);
+  },[tplOpen]);
+
+  const showToast = m => { setToast(m); setTimeout(()=>setToast(''),2500); };
+
+  const loadTpl = name => { const t=templates[name]; if(t){ setCats(t); setFiles({}); setTplOpen(false); showToast(`"${name}" 템플릿 로드됨`); } };
+  const saveTpl = () => { const n=tplName.trim(); if(!n) return; setTemplates(p=>({...p,[n]:[...cats]})); setTplName(''); showToast(`"${n}" 템플릿 저장됨`); };
+  const delTpl = name => { setTemplates(p=>{ const n={...p}; delete n[name]; return n; }); };
+  const activeTpl = Object.entries(templates).find(([,v])=>JSON.stringify(v)===JSON.stringify(cats))?.[0] || null;
+  const curName = manualName.trim() || 'photo';
+
+  const addCat = () => { const n=newCat.trim(); if(!n||cats.includes(n)) return; setCats(p=>[...p,n]); setNewCat(''); };
+  const rmCat = c => { setCats(p=>p.filter(x=>x!==c)); setFiles(p=>{const n={...p};delete n[c];return n;}); };
+
+  const addFiles = (cat, fl) => {
+    const arr = [];
+    for (const f of fl) { if(!f.type.startsWith('image/')) continue; arr.push({file:f, thumb:URL.createObjectURL(f), assignedName:curName}); }
+    if(!arr.length) return;
+    setFiles(p=>({...p,[cat]:[...(p[cat]||[]),...arr]}));
+  };
+  const rmFile = (cat,i) => { setFiles(p=>{const a=[...(p[cat]||[])]; URL.revokeObjectURL(a[i]?.thumb); a.splice(i,1); return{...p,[cat]:a};}); };
+  const clearCat = cat => { (files[cat]||[]).forEach(f=>URL.revokeObjectURL(f.thumb)); setFiles(p=>({...p,[cat]:[]})); };
+
+  const getName = (cf,cn,i) => {
+    const e=cf[i]; const base=e.assignedName||'photo';
+    const ext=outFmt==='original'?getExt(e.file.name):'.'+outFmt;
+    const num=cf.length>1?`${i+1}`:'';
+    return `${base}${sep}${cn}${num}${ext}`;
+  };
+
+  const allRenames = useMemo(()=>{
+    const r=[];
+    cats.forEach(c=>{const cf=files[c]||[]; cf.forEach((e,i)=>r.push({cat:c,orig:e.file.name,newN:getName(cf,c,i),entry:e,cf,i}));});
+    return r;
+  },[cats,files,outFmt,sep]);
+
+  const totalFiles = allRenames.length;
+  const totalSize = allRenames.reduce((s,r)=>s+r.entry.file.size,0);
+
+  // Lightbox nav
+  const allFlat = useMemo(()=>{
+    const r=[]; cats.forEach(c=>(files[c]||[]).forEach((e,i)=>r.push({cat:c,idx:i,entry:e}))); return r;
+  },[cats,files]);
+  const lbIdx = lightbox ? allFlat.findIndex(x=>x.cat===lightbox.cat&&x.idx===lightbox.idx) : -1;
+  const lbPrev = () => { if(lbIdx>0){const p=allFlat[lbIdx-1]; setLightbox({cat:p.cat,idx:p.idx});} };
+  const lbNext = () => { if(lbIdx<allFlat.length-1){const p=allFlat[lbIdx+1]; setLightbox({cat:p.cat,idx:p.idx});} };
+  useEffect(()=>{
+    if(!lightbox) return;
+    const h = e => { if(e.key==='Escape') setLightbox(null); if(e.key==='ArrowLeft') lbPrev(); if(e.key==='ArrowRight') lbNext(); };
+    window.addEventListener('keydown',h); return ()=>window.removeEventListener('keydown',h);
+  },[lightbox,lbIdx]);
+
+  const download = async () => {
+    if(!totalFiles) return; setProcessing(true);
+    try {
+      if(totalFiles===1) {
+        const r=allRenames[0]; let b=r.entry.file;
+        if(rmMeta) b=await stripMeta(b,outFmt==='original'?'jpeg':outFmt,jpgQ);
+        const u=URL.createObjectURL(b); const a=document.createElement('a'); a.href=u; a.download=r.newN; a.click(); URL.revokeObjectURL(u);
+      } else {
+        const zip=new JSZip();
+        for(const r of allRenames) { let b=r.entry.file; if(rmMeta) b=await stripMeta(b,outFmt==='original'?'jpeg':outFmt,jpgQ); zip.file(r.newN,b); }
+        const c=await zip.generateAsync({type:'blob'}); const u=URL.createObjectURL(c);
+        const a=document.createElement('a'); a.href=u; a.download='renamed_photos.zip'; a.click(); URL.revokeObjectURL(u);
+      }
+      showToast(`${totalFiles}개 파일 다운로드 완료!`);
+    } catch(e){ console.error(e); showToast('오류가 발생했습니다.'); }
+    setProcessing(false);
+  };
+
+  const onDrop = cat => async e => { e.preventDefault(); setDragOver(null); addFiles(cat,e.dataTransfer.files); };
+  const onDragOver = cat => e => { e.preventDefault(); setDragOver(cat); };
+  const onDragLeave = () => setDragOver(null);
+  const onSelect = cat => e => { addFiles(cat,e.target.files); e.target.value=''; };
+
+  return (
+    <div className="app">
+      {/* Header + Theme */}
+      <div className="header">
+        <div className="header-left">
+          <h1>Image <span>Renamer</span></h1>
+          <p>이미지를 카테고리에 넣으면 자동 리네이밍 + 메타데이터 제거</p>
+        </div>
+        <div className="theme-picker">
+          {THEMES.map(t=>(
+            <div key={t.id} className={`theme-dot ${theme===t.id?'active':''}`} data-t={t.id} title={t.label} onClick={()=>setTheme(t.id)} />
+          ))}
+        </div>
+      </div>
+
+      {/* Name Config */}
+      <div className="name-config">
+        <div className="section-title">파일 이름 설정</div>
+        <input className="input" placeholder="예: 깡통" value={manualName} onChange={e=>setManualName(e.target.value)} />
+        <div className="hint">결과 예시: <strong style={{color:'var(--success)'}}>{manualName||'photo'}{sep}카테고리1.jpg</strong></div>
+      </div>
+
+      {/* Options */}
+      <div className="options-row">
+        <label className="opt"><input type="checkbox" checked={rmMeta} onChange={e=>setRmMeta(e.target.checked)} /> 메타데이터 제거</label>
+        <label className="opt">구분자: <input className="input sep-input" value={sep} onChange={e=>setSep(e.target.value)} maxLength={3} /></label>
+        <label className="opt">출력:
+          <select className="sel" value={outFmt} onChange={e=>setOutFmt(e.target.value)}>
+            <option value="original">원본</option><option value="jpeg">JPEG</option><option value="png">PNG</option><option value="webp">WebP</option>
+          </select>
+        </label>
+        {outFmt==='jpeg' && <label className="opt">품질: {jpgQ}% <input type="range" min="50" max="100" value={jpgQ} onChange={e=>setJpgQ(+e.target.value)} /></label>}
+      </div>
+
+      {/* Stats + View Toggle */}
+      {totalFiles > 0 && (
+        <div className="stats">
+          <span>총 <span className="stat-num">{totalFiles}</span>개</span>
+          <span>용량 <span className="stat-num">{fmtSize(totalSize)}</span></span>
+          <span>카테고리 <span className="stat-num">{cats.filter(c=>(files[c]||[]).length>0).length}</span>개 사용</span>
+          <div style={{marginLeft:'auto'}} />
+          <div className="view-toggle">
+            <button className={`view-btn ${viewMode==='list'?'active':''}`} onClick={()=>setViewMode('list')} title="리스트">☰</button>
+            <button className={`view-btn ${viewMode==='album'?'active':''}`} onClick={()=>setViewMode('album')} title="앨범">▦</button>
+          </div>
+        </div>
+      )}
+
+      {/* Current Name */}
+      <div className="cur-name-bar">
+        <span className="cur-name-label">현재 적용될 이름:</span>
+        <span className="cur-name-badge">{curName}</span>
+      </div>
+
+      {/* Templates */}
+      <div className="tpl-wrap" ref={tplRef}>
+        <button className={`tpl-trigger ${tplOpen?'open':''}`} onClick={()=>setTplOpen(p=>!p)}>
+          <div className="tpl-trigger-left">
+            <span className="tpl-trigger-label">템플릿</span>
+            {activeTpl ? <span className="tpl-trigger-name">{activeTpl}</span> : <span style={{color:'var(--text-muted)'}}>선택하세요</span>}
+          </div>
+          <span className={`tpl-arrow ${tplOpen?'open':''}`}>▼</span>
+        </button>
+        {tplOpen && (
+          <div className="tpl-dropdown">
+            {Object.entries(templates).map(([name, catList])=>(
+              <div key={name} className={`tpl-item ${activeTpl===name?'active':''}`} onClick={()=>loadTpl(name)}>
+                <div className="tpl-item-left">
+                  <div className="tpl-item-name">{name}</div>
+                  <div className="tpl-item-cats">{catList.join(', ')}</div>
+                </div>
+                <button className="tpl-item-del" onClick={e=>{e.stopPropagation();delTpl(name);}} title="삭제">🗑</button>
+              </div>
+            ))}
+            {Object.keys(templates).length===0 && (
+              <div style={{padding:'12px 14px',fontSize:'12px',color:'var(--text-muted)'}}>저장된 템플릿이 없습니다</div>
+            )}
+            <div className="tpl-save-row">
+              <input className="tpl-save-input" placeholder="현재 카테고리를 템플릿으로 저장..." value={tplName} onChange={e=>setTplName(e.target.value)} onKeyDown={e=>e.key==='Enter'&&saveTpl()} onClick={e=>e.stopPropagation()} />
+              <button className="btn btn-sm btn-accent" onClick={e=>{e.stopPropagation();saveTpl();}}>저장</button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Category Bar */}
+      <div className="cat-bar">
+        <div className="section-title" style={{margin:0}}>카테고리</div>
+        <div className="cat-bar-right">
+          <input className="cat-input" placeholder="새 카테고리" value={newCat} onChange={e=>setNewCat(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addCat()} />
+          <button className="btn btn-sm" onClick={addCat}>추가</button>
+        </div>
+      </div>
+
+      {/* Categories */}
+      <div className="categories-grid">
+        {cats.map(cat => {
+          const cf = files[cat]||[];
+          return (
+            <div key={cat} className={`card ${dragOver===cat?'drag-over':''}`}>
+              <div className="card-head">
+                <div><span className="card-name">{cat}</span><span className="card-count">{cf.length}개</span></div>
+                <div className="card-actions">
+                  {cf.length>0 && <button className="btn-icon" onClick={()=>clearCat(cat)} title="비우기">✕</button>}
+                  <button className="btn-icon" onClick={()=>rmCat(cat)} title="삭제">🗑</button>
+                </div>
+              </div>
+              <div className="drop" onDrop={onDrop(cat)} onDragOver={onDragOver(cat)} onDragLeave={onDragLeave} onClick={()=>refs.current[cat]?.click()}>
+                <input type="file" accept="image/*" multiple ref={el=>refs.current[cat]=el} style={{display:'none'}} onChange={onSelect(cat)} />
+                {cf.length===0 ? (
+                  <div className="drop-empty"><div className="drop-icon">📂</div><div className="drop-text">이미지를 드래그하거나 클릭</div></div>
+                ) : viewMode==='list' ? (
+                  <div className="flist" onClick={e=>e.stopPropagation()}>
+                    {cf.map((entry,i)=>(
+                      <div key={i} className="fitem">
+                        <img className="fthumb" src={entry.thumb} alt="" onClick={()=>setLightbox({cat,idx:i})} />
+                        <div className="finfo">
+                          <div className="foriginal">{entry.file.name}<span className="fname-tag">({entry.assignedName})</span></div>
+                          <div className="fnew">{getName(cf,cat,i)}</div>
+                        </div>
+                        <button className="fremove" onClick={()=>rmFile(cat,i)}>✕</button>
+                      </div>
+                    ))}
+                    <div className="add-more" onClick={()=>refs.current[cat]?.click()}>+ 더 추가</div>
+                  </div>
+                ) : (
+                  <div style={{width:'100%'}} onClick={e=>e.stopPropagation()}>
+                    <div className="album">
+                      {cf.map((entry,i)=>(
+                        <div key={i} className="album-item" onClick={()=>setLightbox({cat,idx:i})}>
+                          <img className="album-img" src={entry.thumb} alt="" />
+                          <div className="album-label">{getName(cf,cat,i)}</div>
+                          <button className="album-remove" onClick={e=>{e.stopPropagation();rmFile(cat,i);}}>✕</button>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="add-more" onClick={()=>refs.current[cat]?.click()}>+ 더 추가</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Bottom */}
+      {totalFiles>0 && (
+        <div className="bottom">
+          <button className="btn btn-big" onClick={()=>setShowPreview(true)}>미리보기 ({totalFiles})</button>
+          <button className="btn btn-big btn-accent" onClick={download} disabled={processing}>{processing?'처리 중...': `다운로드 (${totalFiles})`}</button>
+        </div>
+      )}
+
+      {/* Lightbox */}
+      {lightbox && allFlat[lbIdx] && (
+        <div className="lightbox" onClick={()=>setLightbox(null)}>
+          {lbIdx>0 && <button className="lightbox-nav prev" onClick={e=>{e.stopPropagation();lbPrev();}}>‹</button>}
+          <img src={allFlat[lbIdx].entry.thumb} alt="" onClick={e=>e.stopPropagation()} />
+          {lbIdx<allFlat.length-1 && <button className="lightbox-nav next" onClick={e=>{e.stopPropagation();lbNext();}}>›</button>}
+          <div className="lightbox-info" onClick={e=>e.stopPropagation()}>
+            {getName(files[lightbox.cat]||[], lightbox.cat, lightbox.idx)}
+            <span style={{opacity:0.5,marginLeft:8}}>{fmtSize(allFlat[lbIdx].entry.file.size)}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Preview Modal */}
+      {showPreview && (
+        <div className="overlay" onClick={()=>setShowPreview(false)}>
+          <div className="modal" onClick={e=>e.stopPropagation()}>
+            <h3>이름 변경 미리보기</h3>
+            <div className="plist">
+              {allRenames.map((r,i)=>(
+                <div key={i} className="pitem">
+                  <span className="pold">{r.orig}</span>
+                  <span className="parrow">→</span>
+                  <span className="pnew">{r.newN}</span>
+                </div>
+              ))}
+            </div>
+            <div className="modal-actions">
+              <button className="btn" onClick={()=>setShowPreview(false)}>닫기</button>
+              <button className="btn btn-accent" onClick={()=>{setShowPreview(false);download();}} disabled={processing}>다운로드</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {toast && <div className="toast">{toast}</div>}
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('app')).render(<App />);
+</script>
+</body>
+</html>
