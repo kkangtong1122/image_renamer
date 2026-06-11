@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Photo Renamer</title>
+<title>Image Renamer</title>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/pretendard/1.3.9/static/pretendard.min.css" rel="stylesheet" />
 <style>
   /* ===== THEME VARIABLES ===== */
@@ -440,7 +440,10 @@ function App() {
   const getName = (cf,cn,i) => {
     const e=cf[i]; const base=e.assignedName||'photo';
     const ext=outFmt==='original'?getExt(e.file.name):'.'+outFmt;
-    const num=cf.length>1?`${i+1}`:'';
+    // 같은 이름끼리만 넘버링
+    const sameNameItems = cf.filter(x=>x.assignedName===e.assignedName);
+    const idxInGroup = sameNameItems.indexOf(e);
+    const num = sameNameItems.length > 1 ? `${idxInGroup+1}` : '';
     return `${base}${sep}${cn}${num}${ext}`;
   };
 
@@ -509,15 +512,15 @@ function App() {
         <div className="section-title">파일 이름 설정</div>
         <div style={{display:'flex',gap:'10px',flexWrap:'wrap'}}>
           <div style={{flex:'1',minWidth:'140px'}}>
-            <div className="hint" style={{marginTop:0,marginBottom:'6px',fontWeight:600,color:'var(--text-dim)'}}>메인 이름</div>
+            <div className="hint" style={{marginTop:0,marginBottom:'6px',fontWeight:600,color:'var(--text-dim)'}}>이미지 이름</div>
             <input className="input" placeholder="예: 깡통" value={manualName} onChange={e=>setManualName(e.target.value)} />
           </div>
           <div style={{flex:'1',minWidth:'140px'}}>
             <div className="hint" style={{marginTop:0,marginBottom:'6px',fontWeight:600,color:'var(--text-dim)'}}>저장 파일명 (.zip)</div>
-            <input className="input" placeholder="예: 깡통" value={zipName} onChange={e=>setZipName(e.target.value)} />
+            <input className="input" placeholder="예: renamed_photos" value={zipName} onChange={e=>setZipName(e.target.value)} />
           </div>
         </div>
-        <div className="hint">결과 예시: <strong style={{color:'var(--success)'}}>{manualName||'photo'}{sep}카테고리1.jpg</strong> → <strong style={{color:'var(--accent)'}}>{zipName.trim()||'깡통'}.zip</strong></div>
+        <div className="hint">결과 예시: <strong style={{color:'var(--success)'}}>{manualName||'photo'}{sep}카테고리1.jpg</strong> → <strong style={{color:'var(--accent)'}}>{zipName.trim()||'renamed_photos'}.zip</strong></div>
       </div>
 
       {/* Options */}
